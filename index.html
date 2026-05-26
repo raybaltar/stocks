@@ -224,33 +224,33 @@ function getStatus(drawdown){
 
 async function fetchData(asset){
 
-  // STABLE FREE API
-  // Uses Stooq historical CSV
-
+  
   try{
 
+    // Yahoo Finance unofficial endpoint
+    // Works on GitHub Pages
+
+    const url =
+      `https://query1.finance.yahoo.com/v8/finance/chart/${asset.symbol}?range=1y&interval=1d`;
+
     const response =
-      await fetch(
-        `https://stooq.com/q/d/l/?s=${asset.symbol.toLowerCase()}&i=d`
-      );
+      await fetch(url);
 
-    const text = await response.text();
+    const json =
+      await response.json();
 
-    const rows =
-      text.trim().split("\n").slice(1);
+    const result =
+      json.chart.result[0];
 
     const closes =
-      rows.map(r => parseFloat(r.split(",")[4]))
-          .filter(v => !isNaN(v));
-
-    const oneYear =
-      closes.slice(-252);
+      result.indicators.quote[0].close
+        .filter(v => v !== null);
 
     const current =
-      oneYear[oneYear.length - 1];
+      closes[closes.length - 1];
 
     const high =
-      Math.max(...oneYear);
+      Math.max(...closes);
 
     const drawdown =
       ((current - high) / high) * 100;
@@ -263,8 +263,9 @@ async function fetchData(asset){
 
   }catch(e){
 
-    return null;
+    console.log("FAILED:", asset.symbol, e);
 
+    return null;
   }
 }
 
