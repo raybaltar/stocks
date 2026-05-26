@@ -7,9 +7,6 @@
 
 <title>Quant Market Dashboard</title>
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
 <style>
@@ -53,7 +50,6 @@ body{
   background:#171717;
   border-radius:28px;
   padding:24px;
-  transition:0.3s;
   overflow:hidden;
 }
 
@@ -122,6 +118,13 @@ iframe{
   font-size:13px;
 }
 
+.loading{
+  text-align:center;
+  color:#888;
+  font-size:20px;
+  margin-top:80px;
+}
+
 </style>
 
 </head>
@@ -131,8 +134,12 @@ iframe{
 <div class="container">
 
   <div class="header">
-    <h1>Quant Market DDashboard</h1>
+    <h1>Quant Market Dashboard</h1>
     <p>Live market drawdown monitoring</p>
+  </div>
+
+  <div id="loading" class="loading">
+    Loading live market data...
   </div>
 
   <div class="grid" id="grid"></div>
@@ -147,51 +154,18 @@ iframe{
 
 const assets = [
 
-  {
-    symbol:"VOO",
-    label:"S&P 500 ETF",
-    exchange:"AMEX"
-  },
-
-  {
-    symbol:"QQQ",
-    label:"Nasdaq 100",
-    exchange:"NASDAQ"
-  },
-
-  {
-    symbol:"SCHD",
-    label:"Dividend ETF",
-    exchange:"NYSEARCA"
-  },
-
-  {
-    symbol:"VXUS",
-    label:"International ETF",
-    exchange:"NASDAQ"
-  },
-
-  {
-    symbol:"TSLA",
-    label:"Tesla",
-    exchange:"NASDAQ"
-  },
-
-  {
-    symbol:"NVDA",
-    label:"NVIDIA",
-    exchange:"NASDAQ"
-  },
-
-  {
-    symbol:"AAPL",
-    label:"Apple",
-    exchange:"NASDAQ"
-  }
+  { symbol:"VOO", label:"S&P 500 ETF", exchange:"AMEX" },
+  { symbol:"QQQ", label:"Nasdaq 100", exchange:"NASDAQ" },
+  { symbol:"SCHD", label:"Dividend ETF", exchange:"NYSEARCA" },
+  { symbol:"VXUS", label:"International ETF", exchange:"NASDAQ" },
+  { symbol:"TSLA", label:"Tesla", exchange:"NASDAQ" },
+  { symbol:"NVDA", label:"NVIDIA", exchange:"NASDAQ" },
+  { symbol:"AAPL", label:"Apple", exchange:"NASDAQ" }
 
 ];
 
-const grid = document.getElementById("grid");
+const grid =
+  document.getElementById("grid");
 
 function getStatus(drawdown){
 
@@ -224,17 +198,20 @@ function getStatus(drawdown){
 
 async function fetchData(asset){
 
-  
   try{
 
-    // Yahoo Finance unofficial endpoint
-    // Works on GitHub Pages
+    const target =
+      encodeURIComponent(
+        `https://query1.finance.yahoo.com/v8/finance/chart/${asset.symbol}?range=1y&interval=1d`
+      );
 
-    const url =
-      `https://query1.finance.yahoo.com/v8/finance/chart/${asset.symbol}?range=1y&interval=1d`;
+    // PUBLIC CORS PROXY
+
+    const proxy =
+      `https://corsproxy.io/?${target}`;
 
     const response =
-      await fetch(url);
+      await fetch(proxy);
 
     const json =
       await response.json();
@@ -266,6 +243,7 @@ async function fetchData(asset){
     console.log("FAILED:", asset.symbol, e);
 
     return null;
+
   }
 }
 
@@ -393,11 +371,13 @@ async function build(){
     }
 
   }
+
+  document
+    .getElementById("loading")
+    .style.display = "none";
 }
 
 build();
-
-// refresh every 4 hours
 
 setInterval(build,14400000);
 
