@@ -15,16 +15,12 @@
       --muted: #6b6b85;
       --accent: #4af0c4;
       --red: #ff4d6d;
-      --green-stock: #4af09a;
-
-      /* Alert tier colors */
+      --green-price: #4af09a;
       --orange: #ff7b2e;
       --gold: #ffd84a;
       --green-alert: #4af09a;
     }
-
     * { box-sizing: border-box; margin: 0; padding: 0; }
-
     body {
       background: var(--bg);
       color: var(--text);
@@ -32,214 +28,144 @@
       min-height: 100vh;
       padding: 2rem 1.5rem 4rem;
     }
-
-    /* Noise texture overlay */
     body::before {
       content: '';
       position: fixed; inset: 0;
       background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
       pointer-events: none; z-index: 0; opacity: 0.4;
     }
+    .wrapper { max-width: 960px; margin: 0 auto; position: relative; z-index: 1; }
 
-    .wrapper { max-width: 900px; margin: 0 auto; position: relative; z-index: 1; }
-
-    /* Header */
-    header { margin-bottom: 3rem; }
-    .eyebrow {
-      font-family: 'Space Mono', monospace;
-      font-size: 0.65rem;
-      letter-spacing: 0.25em;
-      color: var(--accent);
-      text-transform: uppercase;
-      margin-bottom: 0.5rem;
-    }
-    h1 {
-      font-size: clamp(1.8rem, 5vw, 3rem);
-      font-weight: 800;
-      line-height: 1.1;
-      color: var(--text);
-    }
-    h1 span { color: var(--accent); }
-    .subtitle {
-      margin-top: 0.75rem;
-      color: var(--muted);
-      font-size: 0.9rem;
-      font-family: 'Space Mono', monospace;
-    }
-
-    /* Legend */
-    .legend {
-      display: flex; flex-wrap: wrap; gap: 1rem;
+    /* ── API KEY BANNER ── */
+    #apiKeyBanner {
+      background: #1a1020;
+      border: 1px solid #7c3aed55;
+      border-left: 3px solid #a78bfa;
+      padding: 1rem 1.25rem;
       margin-bottom: 2rem;
+      border-radius: 2px;
     }
-    .legend-item {
-      display: flex; align-items: center; gap: 0.5rem;
-      font-family: 'Space Mono', monospace;
-      font-size: 0.72rem;
+    #apiKeyBanner p { font-family: 'Space Mono', monospace; font-size: 0.72rem; color: #c4b5fd; line-height: 1.7; margin-bottom: 0.75rem; }
+    #apiKeyBanner a { color: #a78bfa; }
+    .key-row { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
+    .key-row input {
+      font-family: 'Space Mono', monospace; font-size: 0.78rem;
+      background: #0d0d16; border: 1px solid #3b2f6b; color: var(--text);
+      padding: 0.45rem 0.75rem; flex: 1; min-width: 220px; outline: none;
     }
-    .legend-dot {
-      width: 10px; height: 10px; border-radius: 50%;
-    }
+    .key-row input:focus { border-color: #a78bfa; }
 
-    /* Table */
-    .table-wrap { overflow-x: auto; }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-family: 'Space Mono', monospace;
-      font-size: 0.82rem;
-    }
-    thead th {
-      text-align: left;
-      padding: 0.6rem 1rem;
-      color: var(--muted);
-      font-size: 0.65rem;
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-      border-bottom: 1px solid var(--border);
-    }
-    tbody tr {
-      border-bottom: 1px solid var(--border);
-      transition: background 0.15s;
-    }
-    tbody tr:hover { background: rgba(255,255,255,0.03); }
+    /* ── HEADER ── */
+    header { margin-bottom: 2.5rem; }
+    .eyebrow { font-family: 'Space Mono', monospace; font-size: 0.65rem; letter-spacing: 0.25em; color: var(--accent); text-transform: uppercase; margin-bottom: 0.5rem; }
+    h1 { font-size: clamp(1.8rem, 5vw, 3rem); font-weight: 800; line-height: 1.1; }
+    h1 span { color: var(--accent); }
+    .subtitle { margin-top: 0.6rem; color: var(--muted); font-size: 0.82rem; font-family: 'Space Mono', monospace; }
 
-    td {
-      padding: 0.85rem 1rem;
-      vertical-align: middle;
-    }
+    /* ── LEGEND ── */
+    .legend { display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.75rem; }
+    .legend-item { display: flex; align-items: center; gap: 0.5rem; font-family: 'Space Mono', monospace; font-size: 0.72rem; }
+    .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
 
-    /* Tier coloring — whole row */
-    tr.tier-orange td { color: var(--orange); }
-    tr.tier-gold   td { color: var(--gold); }
-    tr.tier-green  td { color: var(--green-alert); }
-
-    /* Ticker chip */
-    .ticker {
-      font-weight: 700;
-      font-size: 0.9rem;
-      letter-spacing: 0.05em;
-    }
-
-    /* Change column */
-    .change { font-weight: 700; font-size: 0.95rem; }
-    .change.positive { color: var(--green-stock); }
-    .change.negative { color: var(--red); }
-    tr.tier-orange .change,
-    tr.tier-gold   .change,
-    tr.tier-green  .change { color: inherit; }
-
-    /* Loading / error */
-    .status {
-      font-family: 'Space Mono', monospace;
-      font-size: 0.8rem;
-      color: var(--muted);
-      padding: 0.5rem 1rem;
-    }
-    .spinner {
-      display: inline-block;
-      width: 10px; height: 10px;
-      border: 2px solid var(--muted);
-      border-top-color: var(--accent);
-      border-radius: 50%;
-      animation: spin 0.7s linear infinite;
-      margin-right: 0.5rem;
-      vertical-align: middle;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* Refresh & add */
-    .controls {
-      display: flex; flex-wrap: wrap; gap: 0.75rem;
-      margin-bottom: 1.75rem; align-items: center;
-    }
+    /* ── CONTROLS ── */
+    .controls { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1.5rem; align-items: center; }
     button {
-      font-family: 'Space Mono', monospace;
-      font-size: 0.72rem;
-      letter-spacing: 0.1em;
-      background: transparent;
-      color: var(--accent);
-      border: 1px solid var(--accent);
-      padding: 0.45rem 1rem;
-      cursor: pointer;
-      text-transform: uppercase;
+      font-family: 'Space Mono', monospace; font-size: 0.72rem; letter-spacing: 0.1em;
+      background: transparent; color: var(--accent); border: 1px solid var(--accent);
+      padding: 0.45rem 1rem; cursor: pointer; text-transform: uppercase;
       transition: background 0.15s, color 0.15s;
     }
     button:hover { background: var(--accent); color: var(--bg); }
     button.danger { color: var(--red); border-color: var(--red); }
     button.danger:hover { background: var(--red); color: #fff; }
+    button.purple { color: #a78bfa; border-color: #a78bfa; }
+    button.purple:hover { background: #a78bfa; color: #fff; }
+    button.dim { color: var(--muted); border-color: var(--border); font-size: 0.68rem; }
+    button.dim:hover { background: var(--border); color: var(--text); }
 
-    .add-form {
-      display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;
-    }
+    .add-form { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
     .add-form input {
-      font-family: 'Space Mono', monospace;
-      font-size: 0.8rem;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      color: var(--text);
-      padding: 0.45rem 0.75rem;
-      width: 110px;
-      text-transform: uppercase;
-      outline: none;
+      font-family: 'Space Mono', monospace; font-size: 0.8rem;
+      background: var(--surface); border: 1px solid var(--border); color: var(--text);
+      padding: 0.45rem 0.75rem; width: 110px; text-transform: uppercase; outline: none;
       transition: border-color 0.15s;
     }
     .add-form input:focus { border-color: var(--accent); }
     .add-form input::placeholder { color: var(--muted); text-transform: none; }
 
-    .last-updated {
-      font-family: 'Space Mono', monospace;
-      font-size: 0.65rem;
-      color: var(--muted);
-      margin-left: auto;
-    }
+    .cache-info { font-family: 'Space Mono', monospace; font-size: 0.65rem; color: var(--muted); margin-left: auto; text-align: right; line-height: 1.6; }
+    .cache-info .fresh  { color: var(--accent); }
+    .cache-info .stale  { color: var(--gold); }
 
-    /* Footer note */
-    footer {
-      margin-top: 2.5rem;
-      font-family: 'Space Mono', monospace;
-      font-size: 0.65rem;
-      color: var(--muted);
-      line-height: 1.8;
-    }
+    /* ── TABLE ── */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-family: 'Space Mono', monospace; font-size: 0.82rem; }
+    thead th { text-align: left; padding: 0.6rem 1rem; color: var(--muted); font-size: 0.65rem; letter-spacing: 0.15em; text-transform: uppercase; border-bottom: 1px solid var(--border); }
+    tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
+    tbody tr:hover { background: rgba(255,255,255,0.025); }
+    td { padding: 0.85rem 1rem; vertical-align: middle; }
+
+    tr.tier-orange td { color: var(--orange); }
+    tr.tier-gold   td { color: var(--gold); }
+    tr.tier-green  td { color: var(--green-alert); }
+
+    .ticker { font-weight: 700; font-size: 0.9rem; letter-spacing: 0.05em; }
+    .change { font-weight: 700; font-size: 0.95rem; }
+    .change.positive { color: var(--green-price); }
+    .change.negative { color: var(--red); }
+    tr.tier-orange .change, tr.tier-gold .change, tr.tier-green .change { color: inherit; }
+
+    .status { font-family: 'Space Mono', monospace; font-size: 0.8rem; color: var(--muted); padding: 0.5rem 0; }
+    .spinner { display: inline-block; width: 10px; height: 10px; border: 2px solid var(--muted); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; margin-right: 0.5rem; vertical-align: middle; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    footer { margin-top: 2.5rem; font-family: 'Space Mono', monospace; font-size: 0.65rem; color: var(--muted); line-height: 1.9; }
+    footer a { color: var(--muted); }
+    code { background: #1a1a28; padding: 0.1em 0.35em; font-size: 0.9em; }
 
     @media (max-width: 600px) {
-      td, th { padding: 0.7rem 0.6rem; }
-      table { font-size: 0.75rem; }
+      td, th { padding: 0.65rem 0.55rem; }
+      table { font-size: 0.73rem; }
     }
   </style>
 </head>
 <body>
 <div class="wrapper">
 
-  <header>
-    <div class="eyebrow">Portfolio Monitor</div>
-    <h1>3-Year High <span>Tracker</span></h1>
-    <p class="subtitle">Live price vs. rolling 3-year high · color-coded by drawdown</p>
-  </header>
-
-  <div class="legend">
-    <div class="legend-item">
-      <div class="legend-dot" style="background:var(--orange)"></div>
-      <span style="color:var(--orange)">≥ −20% from 3yr high</span>
-    </div>
-    <div class="legend-item">
-      <div class="legend-dot" style="background:var(--gold)"></div>
-      <span style="color:var(--gold)">≥ −30% from 3yr high</span>
-    </div>
-    <div class="legend-item">
-      <div class="legend-dot" style="background:var(--green-alert)"></div>
-      <span style="color:var(--green-alert)">≥ −40% from 3yr high</span>
+  <div id="apiKeyBanner">
+    <p>
+      <strong style="color:#e2d9ff">📌 One-time setup:</strong> this page uses the
+      <a href="https://financialmodelingprep.com/developer/docs" target="_blank">Financial Modeling Prep API</a>
+      (free · 250 calls/day · no credit card).<br>
+      Get your free key at <a href="https://financialmodelingprep.com/developer/docs" target="_blank">financialmodelingprep.com</a>,
+      paste it below, and click <strong>Save Key</strong>. Data is cached locally and only re-fetched every 6 hours.
+    </p>
+    <div class="key-row">
+      <input id="apiKeyInput" type="text" placeholder="Paste your FMP API key here…" />
+      <button class="purple" onclick="saveKey()">Save Key</button>
+      <button class="danger" onclick="clearKey()">Clear Key</button>
     </div>
   </div>
 
+  <header>
+    <div class="eyebrow">Portfolio Monitor</div>
+    <h1>3-Year High <span>Tracker</span></h1>
+    <p class="subtitle">Live price vs. rolling 3-year high · color-coded by drawdown · cached 6 hrs</p>
+  </header>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--orange)"></div><span style="color:var(--orange)">≥ −20% from 3yr high</span></div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--gold)"></div><span style="color:var(--gold)">≥ −30% from 3yr high</span></div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--green-alert)"></div><span style="color:var(--green-alert)">≥ −40% from 3yr high</span></div>
+  </div>
+
   <div class="controls">
-    <button id="refreshBtn" onclick="loadAll()">⟳ Refresh</button>
+    <button onclick="forceRefreshAll()">⟳ Force Refresh</button>
     <div class="add-form">
       <input id="addInput" type="text" placeholder="e.g. NVDA" maxlength="10" />
       <button onclick="addStock()">+ Add Stock</button>
     </div>
-    <span id="lastUpdated" class="last-updated"></span>
+    <div id="cacheInfo" class="cache-info"></div>
   </div>
 
   <div class="table-wrap">
@@ -254,167 +180,259 @@
           <th>Action</th>
         </tr>
       </thead>
-      <tbody id="stockTable">
-        <!-- Rows injected by JS -->
-      </tbody>
+      <tbody id="stockTable"></tbody>
     </table>
   </div>
 
   <footer>
-    Data sourced via Yahoo Finance public API. Prices may be delayed 15–20 min.<br>
-    To permanently add stocks, edit the <code>STOCKS</code> array at the top of the &lt;script&gt; in index.html.
+    Data: <a href="https://financialmodelingprep.com" target="_blank">Financial Modeling Prep</a>
+    · free tier = 250 calls/day · end-of-day prices · fetched at most every 6 hours.<br>
+    To permanently add tickers, edit the <code>STOCKS</code> array at the top of the &lt;script&gt; in index.html.
   </footer>
 
 </div>
 
 <script>
-  // ─────────────────────────────────────────────
-  //  ADD OR REMOVE TICKERS HERE
-  // ─────────────────────────────────────────────
-  let STOCKS = ['VOO', 'VTSAX', 'TSLA', 'AAPL'];
-  // ─────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────
+//  ① EDIT THIS LIST to change your default stocks
+// ─────────────────────────────────────────────────────────
+let STOCKS = ['VOO', 'VTSAX', 'TSLA', 'AAPL'];
+// ─────────────────────────────────────────────────────────
 
-  const PROXY = 'https://query1.finance.yahoo.com/v8/finance/chart/';
+const BASE        = 'https://financialmodelingprep.com/api/v3';
+const CACHE_TTL   = 6 * 60 * 60 * 1000; // 6 hours in ms
+const CACHE_KEY   = 'stt_cache';         // localStorage key for all cached stock data
 
-  // Three years ago timestamp (unix seconds)
-  function threeYearsAgo() {
-    const d = new Date();
-    d.setFullYear(d.getFullYear() - 3);
-    return Math.floor(d.getTime() / 1000);
-  }
+// ── Persistence helpers ──────────────────────────────────
+function getKey()  { return localStorage.getItem('fmp_api_key') || ''; }
 
-  async function fetchStock(ticker) {
-    const now  = Math.floor(Date.now() / 1000);
-    const from = threeYearsAgo();
-    const url  = `${PROXY}${ticker}?interval=1wk&period1=${from}&period2=${now}&events=history&corsDomain=finance.yahoo.com`;
+function loadCache() {
+  try { return JSON.parse(localStorage.getItem(CACHE_KEY) || '{}'); }
+  catch { return {}; }
+}
+function saveCache(cache) {
+  localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
+}
 
-    const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const json = await res.json();
+// Returns cached entry if still fresh, otherwise null
+function getCached(ticker) {
+  const cache = loadCache();
+  const entry = cache[ticker];
+  if (!entry) return null;
+  if (Date.now() - entry.fetchedAt > CACHE_TTL) return null;
+  return entry;
+}
 
-    const result = json.chart?.result?.[0];
-    if (!result) throw new Error('No data');
+function setCached(ticker, data) {
+  const cache = loadCache();
+  cache[ticker] = { ...data, fetchedAt: Date.now() };
+  saveCache(cache);
+}
 
-    const meta   = result.meta;
-    const name   = meta.longName || meta.shortName || ticker;
-    const closes = result.indicators?.adjclose?.[0]?.adjclose || result.indicators?.quote?.[0]?.close || [];
-    const highs  = result.indicators?.quote?.[0]?.high || [];
+function clearCacheFor(ticker) {
+  const cache = loadCache();
+  delete cache[ticker];
+  saveCache(cache);
+}
 
-    // 3-yr high = max of weekly high values (or close if no high available)
-    const highVals = highs.length ? highs : closes;
-    const high3yr  = Math.max(...highVals.filter(v => v != null));
-    const current  = meta.regularMarketPrice || closes.filter(v => v != null).at(-1);
+// ── API key UI ───────────────────────────────────────────
+function saveKey() {
+  const k = document.getElementById('apiKeyInput').value.trim();
+  if (!k) { alert('Please paste your API key first.'); return; }
+  localStorage.setItem('fmp_api_key', k);
+  alert('Key saved! Loading data now…');
+  loadAll(false);
+}
+function clearKey() {
+  localStorage.removeItem('fmp_api_key');
+  localStorage.removeItem(CACHE_KEY);
+  document.getElementById('apiKeyInput').value = '';
+  document.getElementById('stockTable').innerHTML =
+    '<tr><td colspan="6"><span class="status">API key cleared. Enter your key above to reload.</span></td></tr>';
+  updateCacheInfo();
+}
 
-    if (!high3yr || !current) throw new Error('Insufficient data');
+// ── Date helpers ─────────────────────────────────────────
+function threeYearsAgo() {
+  const d = new Date(); d.setFullYear(d.getFullYear() - 3);
+  return d.toISOString().split('T')[0];
+}
+function todayStr() { return new Date().toISOString().split('T')[0]; }
 
-    const pct = ((current - high3yr) / high3yr) * 100;
+// ── Fetch one stock from API ─────────────────────────────
+async function fetchFromAPI(ticker) {
+  const key  = getKey();
+  if (!key) throw new Error('No API key — enter it above');
 
-    return { ticker, name, high3yr, current, pct };
-  }
+  const [histRes, quoteRes] = await Promise.all([
+    fetch(`${BASE}/historical-price-full/${ticker}?from=${threeYearsAgo()}&to=${todayStr()}&apikey=${key}`),
+    fetch(`${BASE}/quote/${ticker}?apikey=${key}`)
+  ]);
 
-  function tierClass(pct) {
-    if (pct <= -40) return 'tier-green';
-    if (pct <= -30) return 'tier-gold';
-    if (pct <= -20) return 'tier-orange';
-    return '';
-  }
+  if (!histRes.ok)  throw new Error(`HTTP ${histRes.status}`);
+  if (!quoteRes.ok) throw new Error(`HTTP ${quoteRes.status}`);
 
-  function fmt(n, decimals = 2) {
-    return n.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
-  }
+  const histJson  = await histRes.json();
+  const quoteJson = await quoteRes.json();
 
-  function renderRow(data, loading = false, error = null) {
-    const { ticker } = data;
-    const tr = document.createElement('tr');
-    tr.id = `row-${ticker}`;
+  if (histJson['Error Message'])  throw new Error(histJson['Error Message']);
+  if (quoteJson['Error Message']) throw new Error(quoteJson['Error Message']);
 
-    if (loading) {
-      tr.innerHTML = `
-        <td class="ticker">${ticker}</td>
-        <td colspan="4"><span class="status"><span class="spinner"></span>Loading…</span></td>
-        <td><button class="danger" onclick="removeStock('${ticker}')">✕ Remove</button></td>`;
-      return tr;
+  const historical = histJson.historical;
+  if (!historical || historical.length === 0) throw new Error('No historical data');
+
+  const quote   = Array.isArray(quoteJson) ? quoteJson[0] : quoteJson;
+  if (!quote?.price) throw new Error('No quote data');
+
+  const high3yr = Math.max(...historical.map(d => d.high || d.close || 0));
+  const current = quote.price;
+  const name    = quote.name || ticker;
+
+  if (!high3yr) throw new Error('Could not compute 3yr high');
+
+  const pct = ((current - high3yr) / high3yr) * 100;
+  return { ticker, name, high3yr, current, pct };
+}
+
+// ── Smart load: use cache or fetch ──────────────────────
+async function loadStock(ticker, forceRefresh = false) {
+  const tbody = document.getElementById('stockTable');
+
+  // Show loading row
+  const existing = document.getElementById(`row-${ticker}`);
+  const loadRow  = renderRow({ ticker }, true);
+  if (existing) tbody.replaceChild(loadRow, existing);
+  else          tbody.appendChild(loadRow);
+
+  // Check cache first (unless force-refreshing)
+  if (!forceRefresh) {
+    const cached = getCached(ticker);
+    if (cached) {
+      document.getElementById(`row-${ticker}`)?.replaceWith(renderRow(cached));
+      updateCacheInfo();
+      return;
     }
+  }
 
-    if (error) {
-      tr.innerHTML = `
-        <td class="ticker">${ticker}</td>
-        <td colspan="4"><span class="status" style="color:var(--red)">⚠ ${error}</span></td>
-        <td><button class="danger" onclick="removeStock('${ticker}')">✕ Remove</button></td>`;
-      return tr;
-    }
+  // Fetch from API
+  try {
+    const data = await fetchFromAPI(ticker);
+    setCached(ticker, data);
+    document.getElementById(`row-${ticker}`)?.replaceWith(renderRow(data));
+  } catch (e) {
+    document.getElementById(`row-${ticker}`)?.replaceWith(renderRow({ ticker }, false, e.message));
+  }
+  updateCacheInfo();
+}
 
-    const { name, high3yr, current, pct } = data;
-    const tier   = tierClass(pct);
-    const sign   = pct >= 0 ? '+' : '';
-    const cls    = tier ? '' : (pct >= 0 ? 'positive' : 'negative');
+// ── Load all stocks ──────────────────────────────────────
+async function loadAll(forceRefresh = false) {
+  if (!getKey()) {
+    document.getElementById('stockTable').innerHTML =
+      '<tr><td colspan="6"><span class="status" style="color:#a78bfa">⚠ Enter your FMP API key above and click Save Key.</span></td></tr>';
+    return;
+  }
+  await Promise.all(STOCKS.map(t => loadStock(t, forceRefresh)));
+  updateCacheInfo();
+}
 
-    tr.className = tier;
-    tr.innerHTML = `
-      <td class="ticker">${ticker}</td>
-      <td>${name}</td>
-      <td>$${fmt(high3yr)}</td>
-      <td>$${fmt(current)}</td>
-      <td class="change ${cls}">${sign}${fmt(pct)}%</td>
-      <td><button class="danger" onclick="removeStock('${ticker}')">✕ Remove</button></td>`;
+function forceRefreshAll() {
+  STOCKS.forEach(clearCacheFor);
+  loadAll(true);
+}
+
+// ── Cache status display ─────────────────────────────────
+function updateCacheInfo() {
+  const cache = loadCache();
+  const now   = Date.now();
+  const infos = STOCKS.map(t => {
+    const entry = cache[t];
+    if (!entry) return null;
+    const ageMs  = now - entry.fetchedAt;
+    const ageMin = Math.floor(ageMs / 60000);
+    const nextMs = CACHE_TTL - ageMs;
+    const nextH  = Math.floor(nextMs / 3600000);
+    const nextM  = Math.floor((nextMs % 3600000) / 60000);
+    return { ticker: t, ageMin, nextH, nextM, fresh: ageMs < CACHE_TTL };
+  }).filter(Boolean);
+
+  if (!infos.length) { document.getElementById('cacheInfo').innerHTML = ''; return; }
+
+  const oldest     = infos.reduce((a, b) => a.ageMin > b.ageMin ? a : b);
+  const allFresh   = infos.every(i => i.fresh);
+  const fetchedAt  = new Date(cache[oldest.ticker]?.fetchedAt).toLocaleTimeString();
+  const cls        = allFresh ? 'fresh' : 'stale';
+  const next       = infos[0]; // all fetched together, use first
+  document.getElementById('cacheInfo').innerHTML =
+    `<span class="${cls}">● cached</span> · fetched ${fetchedAt}<br>next refresh in ${next.nextH}h ${next.nextM}m`;
+}
+
+// ── Render ───────────────────────────────────────────────
+function tierClass(pct) {
+  if (pct <= -40) return 'tier-green';
+  if (pct <= -30) return 'tier-gold';
+  if (pct <= -20) return 'tier-orange';
+  return '';
+}
+function fmt(n, dec = 2) {
+  return n.toLocaleString('en-US', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+}
+
+function renderRow(data, loading = false, error = null) {
+  const { ticker } = data;
+  const tr  = document.createElement('tr');
+  tr.id     = `row-${ticker}`;
+  const btn = `<button class="danger" onclick="removeStock('${ticker}')">✕</button>`;
+
+  if (loading) {
+    tr.innerHTML = `<td class="ticker">${ticker}</td><td colspan="4"><span class="status"><span class="spinner"></span>Loading…</span></td><td>${btn}</td>`;
+    return tr;
+  }
+  if (error) {
+    tr.innerHTML = `<td class="ticker">${ticker}</td><td colspan="4"><span class="status" style="color:var(--red)">⚠ ${error}</span></td><td>${btn}</td>`;
     return tr;
   }
 
-  async function loadStock(ticker) {
-    const tbody = document.getElementById('stockTable');
+  const { name, high3yr, current, pct } = data;
+  const tier = tierClass(pct);
+  const sign = pct >= 0 ? '+' : '';
+  const cls  = tier ? '' : (pct >= 0 ? 'positive' : 'negative');
+  tr.className = tier;
+  tr.innerHTML = `
+    <td class="ticker">${ticker}</td>
+    <td>${name}</td>
+    <td>$${fmt(high3yr)}</td>
+    <td>$${fmt(current)}</td>
+    <td class="change ${cls}">${sign}${fmt(pct)}%</td>
+    <td>${btn}</td>`;
+  return tr;
+}
 
-    // Show loading row (replace if exists)
-    let existing = document.getElementById(`row-${ticker}`);
-    const loadRow = renderRow({ ticker }, true);
-    if (existing) {
-      tbody.replaceChild(loadRow, existing);
-    } else {
-      tbody.appendChild(loadRow);
-    }
+// ── Add / Remove ─────────────────────────────────────────
+function addStock() {
+  const input  = document.getElementById('addInput');
+  const ticker = input.value.trim().toUpperCase();
+  if (!ticker) return;
+  if (STOCKS.includes(ticker)) { alert(`${ticker} is already in the list.`); return; }
+  STOCKS.push(ticker);
+  input.value = '';
+  loadStock(ticker, false);
+}
+function removeStock(ticker) {
+  STOCKS = STOCKS.filter(t => t !== ticker);
+  clearCacheFor(ticker);
+  document.getElementById(`row-${ticker}`)?.remove();
+  updateCacheInfo();
+}
 
-    try {
-      const data = await fetchStock(ticker);
-      const row  = renderRow(data);
-      document.getElementById(`row-${ticker}`)?.replaceWith(row);
-    } catch (e) {
-      const errRow = renderRow({ ticker }, false, e.message);
-      document.getElementById(`row-${ticker}`)?.replaceWith(errRow);
-    }
-  }
+document.getElementById('addInput').addEventListener('keydown', e => { if (e.key === 'Enter') addStock(); });
 
-  async function loadAll() {
-    document.getElementById('lastUpdated').textContent = 'Updating…';
-    await Promise.all(STOCKS.map(loadStock));
-    const now = new Date();
-    document.getElementById('lastUpdated').textContent =
-      `Last updated: ${now.toLocaleTimeString()}`;
-  }
-
-  function addStock() {
-    const input  = document.getElementById('addInput');
-    const ticker = input.value.trim().toUpperCase();
-    if (!ticker) return;
-    if (STOCKS.includes(ticker)) {
-      alert(`${ticker} is already in the list.`);
-      return;
-    }
-    STOCKS.push(ticker);
-    input.value = '';
-    loadStock(ticker);
-  }
-
-  function removeStock(ticker) {
-    STOCKS = STOCKS.filter(t => t !== ticker);
-    document.getElementById(`row-${ticker}`)?.remove();
-  }
-
-  // Allow Enter key in input
-  document.getElementById('addInput').addEventListener('keydown', e => {
-    if (e.key === 'Enter') addStock();
-  });
-
-  // Initial load
-  loadAll();
+// ── Init ─────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  const saved = getKey();
+  if (saved) document.getElementById('apiKeyInput').value = saved;
+  loadAll(false);
+});
 </script>
 </body>
 </html>
