@@ -82,14 +82,10 @@
 
   <div id="apiKeyBanner">
     <p>
-      <strong>📌 One-time setup — takes 30 seconds:</strong><br>
-      1. Go to <a href="https://www.alphavantage.co/support/#api-key" target="_blank">alphavantage.co/support/#api-key</a><br>
-      2. Enter your email → your free key appears instantly on screen (no email needed, no credit card)<br>
-      3. Paste it below and click <strong>Save Key</strong> — stored in your browser only, never shared<br><br>
-      Free tier: <strong>25 calls/day</strong>. With 6-hour caching, 4 stocks uses only 8 calls/day. ✓
+      <strong>📌 One-time setup:</strong> paste your <a href="https://massive.com/dashboard/keys" target="_blank">Massive API key</a> below and click <strong>Save Key</strong>. Stored in your browser only, never shared.
     </p>
     <div class="key-row">
-      <input id="apiKeyInput" type="text" placeholder="Paste your Alpha Vantage API key here…" />
+      <input id="apiKeyInput" type="text" placeholder="Paste your Massive API key here…" />
       <button onclick="saveKey()">Save Key</button>
       <button class="danger" onclick="clearKey()">Clear</button>
     </div>
@@ -133,7 +129,7 @@
   </div>
 
   <footer>
-    Data: <a href="https://www.alphavantage.co" target="_blank">Alpha Vantage</a> · free tier · end-of-day prices · fetched at most every 6 hours.<br>
+    Data: <a href="https://massive.com" target="_blank">Massive</a> · daily OHLC bars · fetched at most every 6 hours · cached in browser.<br>
     To permanently add tickers, edit the <code>STOCKS</code> array at the top of the &lt;script&gt; in index.html.
   </footer>
 
@@ -146,19 +142,18 @@
 let STOCKS = ['VOO', 'VTSAX', 'TSLA', 'AAPL'];
 // ─────────────────────────────────────────────────────────
 
-const AV_BASE   = 'https://www.alphavantage.co/query';
+const BASE      = 'https://api.massive.com';
 const CACHE_TTL = 6 * 60 * 60 * 1000; // 6 hours
-const CACHE_KEY = 'stt_cache_av';
+const CACHE_KEY = 'stt_cache_massive';
 
-// ── Storage ──────────────────────────────────────────────
-function getKey()    { return localStorage.getItem('av_api_key') || ''; }
+// ── Storage helpers ──────────────────────────────────────
+function getKey()    { return localStorage.getItem('massive_api_key') || ''; }
 function loadCache() { try { return JSON.parse(localStorage.getItem(CACHE_KEY) || '{}'); } catch { return {}; } }
 function saveCache(c){ localStorage.setItem(CACHE_KEY, JSON.stringify(c)); }
 
 function getCached(ticker) {
   const e = loadCache()[ticker];
-  if (!e) return null;
-  if (Date.now() - e.fetchedAt > CACHE_TTL) return null;
+  if (!e || Date.now() - e.fetchedAt > CACHE_TTL) return null;
   return e;
 }
 function setCached(ticker, data) {
@@ -174,12 +169,11 @@ function clearCacheFor(ticker) {
 function saveKey() {
   const k = document.getElementById('apiKeyInput').value.trim();
   if (!k) { alert('Please paste your API key first.'); return; }
-  localStorage.setItem('av_api_key', k);
-  alert('Key saved! Loading data now…');
+  localStorage.setItem('massive_api_key', k);
   loadAll(false);
 }
 function clearKey() {
-  localStorage.removeItem('av_api_key');
+  localStorage.removeItem('massive_api_key');
   localStorage.removeItem(CACHE_KEY);
   document.getElementById('apiKeyInput').value = '';
   document.getElementById('stockTable').innerHTML =
@@ -187,60 +181,71 @@ function clearKey() {
   updateCacheInfo();
 }
 
-// ── Fetch from Alpha Vantage ─────────────────────────────────────────
-// ONE call per stock. TIME_SERIES_WEEKLY_ADJUSTED includes historical highs
-// AND the latest close, so no separate quote call is needed.
+// ── Date helpers ─────────────────────────────────────────
+function threeYearsAgo() {
+  const d = new Date();
+  d.setFullYear(d.getFullYear() - 3);
+  return d.toISOString().split('T')[0]; // YYYY-MM-DD
+}
+function yesterday() {
+  const d = new Date();
+  d.setDate(d.getDate() - 1);
+  return d.toISOString().split('T')[0];
+}
+
+// ── Fetch one stock from Massive ─────────────────────────
+// Uses the Custom Bars endpoint: daily OHLC for 3 years in one call.
+// Docs: GET /v2/aggs/ticker/{ticker}/range/1/day/{from}/{to}
+// Response: { results: [ { o, h, l, c, v, t }, ... ], resultsCount, status }
 async function fetchFromAPI(ticker) {
-  const key = getKey();
+  const key  = getKey();
   if (!key) throw new Error('No API key — enter it above');
 
-  const res = await fetch(`${AV_BASE}?function=TIME_SERIES_WEEKLY_ADJUSTED&symbol=${ticker}&outputsize=full&apikey=${key}`);
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const from = threeYearsAgo();
+  const to   = yesterday();
+  const url  = `${BASE}/v2/aggs/ticker/${ticker}/range/1/day/${from}/${to}?adjusted=true&sort=asc&limit=1500&apiKey=${key}`;
+
+  const res = await fetch(url);
+  if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    throw new Error(`HTTP ${res.status}${body ? ': ' + body.slice(0, 80) : ''}`);
+  }
 
   const json = await res.json();
 
-  const errMsg = json['Error Message'] || json['Note'] || json['Information'];
-  if (errMsg) throw new Error(errMsg.length > 90 ? errMsg.slice(0, 90) + '…' : errMsg);
-
-  const weekly = json['Weekly Adjusted Time Series'];
-  if (!weekly) throw new Error('No weekly data returned');
-
-  const entries = Object.entries(weekly); // newest-first
-  if (!entries.length) throw new Error('Empty data');
-
-  // Most recent close — try adjusted close first, fall back to regular close
-  const latest = entries[0][1];
-  const current = parseFloat(latest['5. adjusted close'] || latest['4. close'] || latest['5. Close'] || 0);
-
-  // 3-year high = max weekly HIGH over the past 3 years
-  const cutoff = new Date();
-  cutoff.setFullYear(cutoff.getFullYear() - 3);
-
-  // AV weekly adjusted fields: 1.open 2.high 3.low 4.close 5.adjusted close 6.volume 7.dividend
-  const high3yr = entries
-    .filter(([date]) => new Date(date) >= cutoff)
-    .reduce((max, [, vals]) => {
-      // Try both common field name variants returned by AV
-      const h = parseFloat(vals['2. high'] || vals['3. high'] || vals['2. High'] || 0);
-      return h > max ? h : max;
-    }, 0);
-
-  if (!high3yr) {
-    // Log the first entry's keys to console so we can see the real field names
-    console.error('3yr high failed for', ticker, '— first entry fields:', Object.keys(entries[0][1]));
-    throw new Error('Could not compute 3yr high (check console for field names)');
+  if (json.status === 'ERROR' || json.error) {
+    throw new Error(json.error || json.message || 'API error');
   }
 
+  const bars = json.results;
+  if (!bars || bars.length === 0) throw new Error('No data returned');
+
+  // 3-year high = max daily HIGH across all bars
+  const high3yr = bars.reduce((max, bar) => bar.h > max ? bar.h : max, 0);
+
+  // Current price = most recent bar's close
+  const current = bars[bars.length - 1].c;
+
+  if (!high3yr) throw new Error('Could not compute 3yr high');
+
   const pct = ((current - high3yr) / high3yr) * 100;
-  return { ticker, name: ticker, high3yr, current, pct };
+
+  // Fetch company name from ticker overview (best-effort, non-blocking)
+  let name = ticker;
+  try {
+    const infoRes = await fetch(`${BASE}/v3/reference/tickers/${ticker}?apiKey=${key}`);
+    if (infoRes.ok) {
+      const info = await infoRes.json();
+      name = info.results?.name || ticker;
+    }
+  } catch { /* use ticker as name fallback */ }
+
+  return { ticker, name, high3yr, current, pct };
 }
 
-// ── Helpers ──────────────────────────────────────────────
-function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
-
-// ── Smart load ───────────────────────────────────────────
+// ── Smart load: cache first, then API ───────────────────
 async function loadStock(ticker, forceRefresh = false) {
-  const tbody = document.getElementById('stockTable');
+  const tbody    = document.getElementById('stockTable');
   const existing = document.getElementById(`row-${ticker}`);
   const loadRow  = renderRow({ ticker }, true);
   if (existing) tbody.replaceChild(loadRow, existing);
@@ -250,7 +255,8 @@ async function loadStock(ticker, forceRefresh = false) {
     const cached = getCached(ticker);
     if (cached) {
       document.getElementById(`row-${ticker}`)?.replaceWith(renderRow(cached));
-      updateCacheInfo(); return;
+      updateCacheInfo();
+      return;
     }
   }
 
@@ -264,32 +270,23 @@ async function loadStock(ticker, forceRefresh = false) {
   updateCacheInfo();
 }
 
+// ── Load all stocks in parallel (Massive has no strict rate limit on free tier)
 async function loadAll(forceRefresh = false) {
   if (!getKey()) {
     document.getElementById('stockTable').innerHTML =
-      '<tr><td colspan="6"><span class="status" style="color:var(--accent)">⚠ Enter your Alpha Vantage API key above and click Save Key.</span></td></tr>';
+      '<tr><td colspan="6"><span class="status" style="color:var(--accent)">⚠ Enter your Massive API key above and click Save Key.</span></td></tr>';
     return;
   }
-  // AV free tier: 5 requests per minute = 1 every 12s. We use 2 requests per
-  // stock (weekly + quote), so wait 15s between stocks to stay safely under limit.
-  const WAIT_SEC = 20; // 1 call per stock; AV free = 5/min, 20s gap keeps us safe
-  for (let i = 0; i < STOCKS.length; i++) {
-    await loadStock(STOCKS[i], forceRefresh);
-    if (i < STOCKS.length - 1) {
-      // Show countdown in the cache info area
-      for (let s = WAIT_SEC; s > 0; s--) {
-        document.getElementById('cacheInfo').innerHTML =
-          `<span style="color:var(--gold)">⏳ rate limit pause · next in ${s}s</span>`;
-        await delay(1000);
-      }
-    }
-  }
+  await Promise.all(STOCKS.map(t => loadStock(t, forceRefresh)));
   updateCacheInfo();
 }
 
-function forceRefreshAll() { STOCKS.forEach(clearCacheFor); loadAll(true); }
+function forceRefreshAll() {
+  STOCKS.forEach(clearCacheFor);
+  loadAll(true);
+}
 
-// ── Cache info ───────────────────────────────────────────
+// ── Cache status ─────────────────────────────────────────
 function updateCacheInfo() {
   const cache = loadCache();
   const entry = cache[STOCKS[0]];
