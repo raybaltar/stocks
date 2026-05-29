@@ -97,7 +97,7 @@
 
   <header>
     <div class="eyebrow">Portfolio Monitor</div>
-    <h1>3-Year High <span>TTTracker</span></h1>
+    <h1>3-Year High <span>Tracker</span></h1>
     <p class="subtitle">Price vs. rolling 3-year high · color-coded by drawdown · cached 6 hrs</p>
   </header>
 
@@ -241,6 +241,9 @@ async function fetchFromAPI(ticker) {
   return { ticker, name, high3yr, current, pct };
 }
 
+// ── Helpers ──────────────────────────────────────────────
+function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
 // ── Smart load ───────────────────────────────────────────
 async function loadStock(ticker, forceRefresh = false) {
   const tbody = document.getElementById('stockTable');
@@ -273,8 +276,20 @@ async function loadAll(forceRefresh = false) {
       '<tr><td colspan="6"><span class="status" style="color:var(--accent)">⚠ Enter your Alpha Vantage API key above and click Save Key.</span></td></tr>';
     return;
   }
-  // Load sequentially to avoid hitting AV rate limit (5 req/min on free tier)
-  for (const t of STOCKS) await loadStock(t, forceRefresh);
+  // AV free tier: 5 requests per minute = 1 every 12s. We use 2 requests per
+  // stock (weekly + quote), so wait 15s between stocks to stay safely under limit.
+  const WAIT_SEC = 15;
+  for (let i = 0; i < STOCKS.length; i++) {
+    await loadStock(STOCKS[i], forceRefresh);
+    if (i < STOCKS.length - 1) {
+      // Show countdown in the cache info area
+      for (let s = WAIT_SEC; s > 0; s--) {
+        document.getElementById('cacheInfo').innerHTML =
+          `<span style="color:var(--gold)">⏳ rate limit pause · next in ${s}s</span>`;
+        await delay(1000);
+      }
+    }
+  }
   updateCacheInfo();
 }
 
