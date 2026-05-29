@@ -208,21 +208,28 @@ async function fetchFromAPI(ticker) {
   const entries = Object.entries(weekly); // newest-first
   if (!entries.length) throw new Error('Empty data');
 
-  // Most recent adjusted close = current price proxy
-  const current = parseFloat(entries[0][1]['5. adjusted close']);
+  // Most recent close — try adjusted close first, fall back to regular close
+  const latest = entries[0][1];
+  const current = parseFloat(latest['5. adjusted close'] || latest['4. close'] || latest['5. Close'] || 0);
 
   // 3-year high = max weekly HIGH over the past 3 years
   const cutoff = new Date();
   cutoff.setFullYear(cutoff.getFullYear() - 3);
 
+  // AV weekly adjusted fields: 1.open 2.high 3.low 4.close 5.adjusted close 6.volume 7.dividend
   const high3yr = entries
     .filter(([date]) => new Date(date) >= cutoff)
     .reduce((max, [, vals]) => {
-      const h = parseFloat(vals['3. high']);
+      // Try both common field name variants returned by AV
+      const h = parseFloat(vals['2. high'] || vals['3. high'] || vals['2. High'] || 0);
       return h > max ? h : max;
     }, 0);
 
-  if (!high3yr) throw new Error('Could not compute 3yr high');
+  if (!high3yr) {
+    // Log the first entry's keys to console so we can see the real field names
+    console.error('3yr high failed for', ticker, '— first entry fields:', Object.keys(entries[0][1]));
+    throw new Error('Could not compute 3yr high (check console for field names)');
+  }
 
   const pct = ((current - high3yr) / high3yr) * 100;
   return { ticker, name: ticker, high3yr, current, pct };
