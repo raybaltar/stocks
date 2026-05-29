@@ -187,58 +187,45 @@ function clearKey() {
   updateCacheInfo();
 }
 
-// ── Fetch from Alpha Vantage ─────────────────────────────
-// Alpha Vantage TIME_SERIES_WEEKLY_ADJUSTED gives 20yr of weekly data — perfect for 3yr high
+// ── Fetch from Alpha Vantage ─────────────────────────────────────────
+// ONE call per stock. TIME_SERIES_WEEKLY_ADJUSTED includes historical highs
+// AND the latest close, so no separate quote call is needed.
 async function fetchFromAPI(ticker) {
   const key = getKey();
   if (!key) throw new Error('No API key — enter it above');
 
-  // Weekly adjusted closes + current quote
-  const [weeklyRes, quoteRes] = await Promise.all([
-    fetch(`${AV_BASE}?function=TIME_SERIES_WEEKLY_ADJUSTED&symbol=${ticker}&apikey=${key}`),
-    fetch(`${AV_BASE}?function=GLOBAL_QUOTE&symbol=${ticker}&apikey=${key}`)
-  ]);
+  const res = await fetch(`${AV_BASE}?function=TIME_SERIES_WEEKLY_ADJUSTED&symbol=${ticker}&apikey=${key}`);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-  if (!weeklyRes.ok)  throw new Error(`HTTP ${weeklyRes.status}`);
-  if (!quoteRes.ok)   throw new Error(`HTTP ${quoteRes.status}`);
+  const json = await res.json();
 
-  const weeklyJson = await weeklyRes.json();
-  const quoteJson  = await quoteRes.json();
+  const errMsg = json['Error Message'] || json['Note'] || json['Information'];
+  if (errMsg) throw new Error(errMsg.length > 90 ? errMsg.slice(0, 90) + '…' : errMsg);
 
-  // Check for AV error messages
-  if (weeklyJson['Error Message'] || weeklyJson['Note'] || weeklyJson['Information']) {
-    const msg = weeklyJson['Error Message'] || weeklyJson['Note'] || weeklyJson['Information'];
-    throw new Error(msg.length > 80 ? msg.slice(0, 80) + '…' : msg);
-  }
-  if (quoteJson['Error Message'] || quoteJson['Note'] || quoteJson['Information']) {
-    const msg = quoteJson['Error Message'] || quoteJson['Note'] || quoteJson['Information'];
-    throw new Error(msg.length > 80 ? msg.slice(0, 80) + '…' : msg);
-  }
-
-  const weekly = weeklyJson['Weekly Adjusted Time Series'];
+  const weekly = json['Weekly Adjusted Time Series'];
   if (!weekly) throw new Error('No weekly data returned');
 
-  const quote = quoteJson['Global Quote'];
-  if (!quote || !quote['05. price']) throw new Error('No quote returned');
+  const entries = Object.entries(weekly); // newest-first
+  if (!entries.length) throw new Error('Empty data');
 
-  // Filter to last 3 years
+  // Most recent adjusted close = current price proxy
+  const current = parseFloat(entries[0][1]['5. adjusted close']);
+
+  // 3-year high = max weekly HIGH over the past 3 years
   const cutoff = new Date();
   cutoff.setFullYear(cutoff.getFullYear() - 3);
 
-  const high3yr = Object.entries(weekly)
+  const high3yr = entries
     .filter(([date]) => new Date(date) >= cutoff)
     .reduce((max, [, vals]) => {
-      const h = parseFloat(vals['2. high'] || vals['4. close']);
+      const h = parseFloat(vals['3. high']);
       return h > max ? h : max;
     }, 0);
-
-  const current = parseFloat(quote['05. price']);
-  const name    = ticker; // AV global quote doesn't include name; use ticker as fallback
 
   if (!high3yr) throw new Error('Could not compute 3yr high');
 
   const pct = ((current - high3yr) / high3yr) * 100;
-  return { ticker, name, high3yr, current, pct };
+  return { ticker, name: ticker, high3yr, current, pct };
 }
 
 // ── Helpers ──────────────────────────────────────────────
@@ -278,7 +265,7 @@ async function loadAll(forceRefresh = false) {
   }
   // AV free tier: 5 requests per minute = 1 every 12s. We use 2 requests per
   // stock (weekly + quote), so wait 15s between stocks to stay safely under limit.
-  const WAIT_SEC = 15;
+  const WAIT_SEC = 20; // 1 call per stock; AV free = 5/min, 20s gap keeps us safe
   for (let i = 0; i < STOCKS.length; i++) {
     await loadStock(STOCKS[i], forceRefresh);
     if (i < STOCKS.length - 1) {
