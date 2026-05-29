@@ -8,125 +8,73 @@
   <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #0a0a0f;
-      --surface: #111118;
-      --border: #1e1e2e;
-      --text: #e8e8f0;
-      --muted: #6b6b85;
-      --accent: #4af0c4;
-      --red: #ff4d6d;
-      --green-price: #4af09a;
-      --orange: #ff7b2e;
-      --gold: #ffd84a;
-      --green-alert: #4af09a;
+      --bg: #0a0a0f; --surface: #111118; --border: #1e1e2e;
+      --text: #e8e8f0; --muted: #6b6b85; --accent: #4af0c4;
+      --red: #ff4d6d; --green-price: #4af09a;
+      --orange: #ff7b2e; --gold: #ffd84a; --green-alert: #4af09a;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Syne', sans-serif;
-      min-height: 100vh;
-      padding: 2rem 1.5rem 4rem;
-    }
-    body::before {
-      content: '';
-      position: fixed; inset: 0;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
-      pointer-events: none; z-index: 0; opacity: 0.4;
-    }
+    body { background: var(--bg); color: var(--text); font-family: 'Syne', sans-serif; min-height: 100vh; padding: 2rem 1.5rem 4rem; }
+    body::before { content: ''; position: fixed; inset: 0; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E"); pointer-events: none; z-index: 0; opacity: 0.4; }
     .wrapper { max-width: 960px; margin: 0 auto; position: relative; z-index: 1; }
 
-    /* ── API KEY BANNER ── */
-    #apiKeyBanner {
-      background: #1a1020;
-      border: 1px solid #7c3aed55;
-      border-left: 3px solid #a78bfa;
-      padding: 1rem 1.25rem;
-      margin-bottom: 2rem;
-      border-radius: 2px;
-    }
-    #apiKeyBanner p { font-family: 'Space Mono', monospace; font-size: 0.72rem; color: #c4b5fd; line-height: 1.7; margin-bottom: 0.75rem; }
-    #apiKeyBanner a { color: #a78bfa; }
+    /* BANNER */
+    #apiKeyBanner { background: #0f1a14; border: 1px solid #4af0c433; border-left: 3px solid var(--accent); padding: 1rem 1.25rem; margin-bottom: 2rem; }
+    #apiKeyBanner p { font-family: 'Space Mono', monospace; font-size: 0.72rem; color: #a0d8c8; line-height: 1.8; margin-bottom: 0.75rem; }
+    #apiKeyBanner a { color: var(--accent); }
+    #apiKeyBanner strong { color: #e8f8f4; }
     .key-row { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
-    .key-row input {
-      font-family: 'Space Mono', monospace; font-size: 0.78rem;
-      background: #0d0d16; border: 1px solid #3b2f6b; color: var(--text);
-      padding: 0.45rem 0.75rem; flex: 1; min-width: 220px; outline: none;
-    }
-    .key-row input:focus { border-color: #a78bfa; }
+    .key-row input { font-family: 'Space Mono', monospace; font-size: 0.78rem; background: #060e0a; border: 1px solid #1e3d2e; color: var(--text); padding: 0.45rem 0.75rem; flex: 1; min-width: 220px; outline: none; }
+    .key-row input:focus { border-color: var(--accent); }
 
-    /* ── HEADER ── */
+    /* HEADER */
     header { margin-bottom: 2.5rem; }
     .eyebrow { font-family: 'Space Mono', monospace; font-size: 0.65rem; letter-spacing: 0.25em; color: var(--accent); text-transform: uppercase; margin-bottom: 0.5rem; }
     h1 { font-size: clamp(1.8rem, 5vw, 3rem); font-weight: 800; line-height: 1.1; }
     h1 span { color: var(--accent); }
     .subtitle { margin-top: 0.6rem; color: var(--muted); font-size: 0.82rem; font-family: 'Space Mono', monospace; }
 
-    /* ── LEGEND ── */
+    /* LEGEND */
     .legend { display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.75rem; }
     .legend-item { display: flex; align-items: center; gap: 0.5rem; font-family: 'Space Mono', monospace; font-size: 0.72rem; }
     .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
 
-    /* ── CONTROLS ── */
+    /* CONTROLS */
     .controls { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1.5rem; align-items: center; }
-    button {
-      font-family: 'Space Mono', monospace; font-size: 0.72rem; letter-spacing: 0.1em;
-      background: transparent; color: var(--accent); border: 1px solid var(--accent);
-      padding: 0.45rem 1rem; cursor: pointer; text-transform: uppercase;
-      transition: background 0.15s, color 0.15s;
-    }
+    button { font-family: 'Space Mono', monospace; font-size: 0.72rem; letter-spacing: 0.1em; background: transparent; color: var(--accent); border: 1px solid var(--accent); padding: 0.45rem 1rem; cursor: pointer; text-transform: uppercase; transition: background 0.15s, color 0.15s; }
     button:hover { background: var(--accent); color: var(--bg); }
     button.danger { color: var(--red); border-color: var(--red); }
     button.danger:hover { background: var(--red); color: #fff; }
-    button.purple { color: #a78bfa; border-color: #a78bfa; }
-    button.purple:hover { background: #a78bfa; color: #fff; }
-    button.dim { color: var(--muted); border-color: var(--border); font-size: 0.68rem; }
-    button.dim:hover { background: var(--border); color: var(--text); }
-
     .add-form { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
-    .add-form input {
-      font-family: 'Space Mono', monospace; font-size: 0.8rem;
-      background: var(--surface); border: 1px solid var(--border); color: var(--text);
-      padding: 0.45rem 0.75rem; width: 110px; text-transform: uppercase; outline: none;
-      transition: border-color 0.15s;
-    }
+    .add-form input { font-family: 'Space Mono', monospace; font-size: 0.8rem; background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 0.45rem 0.75rem; width: 110px; text-transform: uppercase; outline: none; }
     .add-form input:focus { border-color: var(--accent); }
     .add-form input::placeholder { color: var(--muted); text-transform: none; }
-
     .cache-info { font-family: 'Space Mono', monospace; font-size: 0.65rem; color: var(--muted); margin-left: auto; text-align: right; line-height: 1.6; }
-    .cache-info .fresh  { color: var(--accent); }
-    .cache-info .stale  { color: var(--gold); }
+    .cache-info .fresh { color: var(--accent); }
 
-    /* ── TABLE ── */
+    /* TABLE */
     .table-wrap { overflow-x: auto; }
     table { width: 100%; border-collapse: collapse; font-family: 'Space Mono', monospace; font-size: 0.82rem; }
     thead th { text-align: left; padding: 0.6rem 1rem; color: var(--muted); font-size: 0.65rem; letter-spacing: 0.15em; text-transform: uppercase; border-bottom: 1px solid var(--border); }
     tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
     tbody tr:hover { background: rgba(255,255,255,0.025); }
     td { padding: 0.85rem 1rem; vertical-align: middle; }
-
     tr.tier-orange td { color: var(--orange); }
     tr.tier-gold   td { color: var(--gold); }
     tr.tier-green  td { color: var(--green-alert); }
-
     .ticker { font-weight: 700; font-size: 0.9rem; letter-spacing: 0.05em; }
     .change { font-weight: 700; font-size: 0.95rem; }
     .change.positive { color: var(--green-price); }
     .change.negative { color: var(--red); }
     tr.tier-orange .change, tr.tier-gold .change, tr.tier-green .change { color: inherit; }
-
-    .status { font-family: 'Space Mono', monospace; font-size: 0.8rem; color: var(--muted); padding: 0.5rem 0; }
+    .status { font-family: 'Space Mono', monospace; font-size: 0.8rem; color: var(--muted); }
     .spinner { display: inline-block; width: 10px; height: 10px; border: 2px solid var(--muted); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; margin-right: 0.5rem; vertical-align: middle; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
     footer { margin-top: 2.5rem; font-family: 'Space Mono', monospace; font-size: 0.65rem; color: var(--muted); line-height: 1.9; }
     footer a { color: var(--muted); }
-    code { background: #1a1a28; padding: 0.1em 0.35em; font-size: 0.9em; }
-
-    @media (max-width: 600px) {
-      td, th { padding: 0.65rem 0.55rem; }
-      table { font-size: 0.73rem; }
-    }
+    code { background: #1a1a28; padding: 0.1em 0.35em; }
+    @media (max-width: 600px) { td, th { padding: 0.65rem 0.55rem; } table { font-size: 0.73rem; } }
   </style>
 </head>
 <body>
@@ -134,23 +82,23 @@
 
   <div id="apiKeyBanner">
     <p>
-      <strong style="color:#e2d9ff">📌 One-time setup:</strong> this page uses the
-      <a href="https://financialmodelingprep.com/developer/docs" target="_blank">Financial Modeling Prep API</a>
-      (free · 250 calls/day · no credit card).<br>
-      Get your free key at <a href="https://financialmodelingprep.com/developer/docs" target="_blank">financialmodelingprep.com</a>,
-      paste it below, and click <strong>Save Key</strong>. Data is cached locally and only re-fetched every 6 hours.
+      <strong>📌 One-time setup — takes 30 seconds:</strong><br>
+      1. Go to <a href="https://www.alphavantage.co/support/#api-key" target="_blank">alphavantage.co/support/#api-key</a><br>
+      2. Enter your email → your free key appears instantly on screen (no email needed, no credit card)<br>
+      3. Paste it below and click <strong>Save Key</strong> — stored in your browser only, never shared<br><br>
+      Free tier: <strong>25 calls/day</strong>. With 6-hour caching, 4 stocks uses only 8 calls/day. ✓
     </p>
     <div class="key-row">
-      <input id="apiKeyInput" type="text" placeholder="Paste your FMP API key here…" />
-      <button class="purple" onclick="saveKey()">Save Key</button>
-      <button class="danger" onclick="clearKey()">Clear Key</button>
+      <input id="apiKeyInput" type="text" placeholder="Paste your Alpha Vantage API key here…" />
+      <button onclick="saveKey()">Save Key</button>
+      <button class="danger" onclick="clearKey()">Clear</button>
     </div>
   </div>
 
   <header>
     <div class="eyebrow">Portfolio Monitor</div>
     <h1>3-Year High <span>Tracker</span></h1>
-    <p class="subtitle">Live price vs. rolling 3-year high · color-coded by drawdown · cached 6 hrs</p>
+    <p class="subtitle">Price vs. rolling 3-year high · color-coded by drawdown · cached 6 hrs</p>
   </header>
 
   <div class="legend">
@@ -177,7 +125,7 @@
           <th>3-Yr High</th>
           <th>Current Price</th>
           <th>% from High</th>
-          <th>Action</th>
+          <th></th>
         </tr>
       </thead>
       <tbody id="stockTable"></tbody>
@@ -185,8 +133,7 @@
   </div>
 
   <footer>
-    Data: <a href="https://financialmodelingprep.com" target="_blank">Financial Modeling Prep</a>
-    · free tier = 250 calls/day · end-of-day prices · fetched at most every 6 hours.<br>
+    Data: <a href="https://www.alphavantage.co" target="_blank">Alpha Vantage</a> · free tier · end-of-day prices · fetched at most every 6 hours.<br>
     To permanently add tickers, edit the <code>STOCKS</code> array at the top of the &lt;script&gt; in index.html.
   </footer>
 
@@ -199,94 +146,94 @@
 let STOCKS = ['VOO', 'VTSAX', 'TSLA', 'AAPL'];
 // ─────────────────────────────────────────────────────────
 
-const BASE        = 'https://financialmodelingprep.com/api/v3';
-const CACHE_TTL   = 6 * 60 * 60 * 1000; // 6 hours in ms
-const CACHE_KEY   = 'stt_cache';         // localStorage key for all cached stock data
+const AV_BASE   = 'https://www.alphavantage.co/query';
+const CACHE_TTL = 6 * 60 * 60 * 1000; // 6 hours
+const CACHE_KEY = 'stt_cache_av';
 
-// ── Persistence helpers ──────────────────────────────────
-function getKey()  { return localStorage.getItem('fmp_api_key') || ''; }
+// ── Storage ──────────────────────────────────────────────
+function getKey()    { return localStorage.getItem('av_api_key') || ''; }
+function loadCache() { try { return JSON.parse(localStorage.getItem(CACHE_KEY) || '{}'); } catch { return {}; } }
+function saveCache(c){ localStorage.setItem(CACHE_KEY, JSON.stringify(c)); }
 
-function loadCache() {
-  try { return JSON.parse(localStorage.getItem(CACHE_KEY) || '{}'); }
-  catch { return {}; }
-}
-function saveCache(cache) {
-  localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
-}
-
-// Returns cached entry if still fresh, otherwise null
 function getCached(ticker) {
-  const cache = loadCache();
-  const entry = cache[ticker];
-  if (!entry) return null;
-  if (Date.now() - entry.fetchedAt > CACHE_TTL) return null;
-  return entry;
+  const e = loadCache()[ticker];
+  if (!e) return null;
+  if (Date.now() - e.fetchedAt > CACHE_TTL) return null;
+  return e;
 }
-
 function setCached(ticker, data) {
-  const cache = loadCache();
-  cache[ticker] = { ...data, fetchedAt: Date.now() };
-  saveCache(cache);
+  const c = loadCache();
+  c[ticker] = { ...data, fetchedAt: Date.now() };
+  saveCache(c);
 }
-
 function clearCacheFor(ticker) {
-  const cache = loadCache();
-  delete cache[ticker];
-  saveCache(cache);
+  const c = loadCache(); delete c[ticker]; saveCache(c);
 }
 
-// ── API key UI ───────────────────────────────────────────
+// ── Key UI ───────────────────────────────────────────────
 function saveKey() {
   const k = document.getElementById('apiKeyInput').value.trim();
   if (!k) { alert('Please paste your API key first.'); return; }
-  localStorage.setItem('fmp_api_key', k);
+  localStorage.setItem('av_api_key', k);
   alert('Key saved! Loading data now…');
   loadAll(false);
 }
 function clearKey() {
-  localStorage.removeItem('fmp_api_key');
+  localStorage.removeItem('av_api_key');
   localStorage.removeItem(CACHE_KEY);
   document.getElementById('apiKeyInput').value = '';
   document.getElementById('stockTable').innerHTML =
-    '<tr><td colspan="6"><span class="status">API key cleared. Enter your key above to reload.</span></td></tr>';
+    '<tr><td colspan="6"><span class="status">Key cleared. Enter a new key above.</span></td></tr>';
   updateCacheInfo();
 }
 
-// ── Date helpers ─────────────────────────────────────────
-function threeYearsAgo() {
-  const d = new Date(); d.setFullYear(d.getFullYear() - 3);
-  return d.toISOString().split('T')[0];
-}
-function todayStr() { return new Date().toISOString().split('T')[0]; }
-
-// ── Fetch one stock from API ─────────────────────────────
+// ── Fetch from Alpha Vantage ─────────────────────────────
+// Alpha Vantage TIME_SERIES_WEEKLY_ADJUSTED gives 20yr of weekly data — perfect for 3yr high
 async function fetchFromAPI(ticker) {
-  const key  = getKey();
+  const key = getKey();
   if (!key) throw new Error('No API key — enter it above');
 
-  const [histRes, quoteRes] = await Promise.all([
-    fetch(`${BASE}/historical-price-full/${ticker}?from=${threeYearsAgo()}&to=${todayStr()}&apikey=${key}`),
-    fetch(`${BASE}/quote/${ticker}?apikey=${key}`)
+  // Weekly adjusted closes + current quote
+  const [weeklyRes, quoteRes] = await Promise.all([
+    fetch(`${AV_BASE}?function=TIME_SERIES_WEEKLY_ADJUSTED&symbol=${ticker}&apikey=${key}`),
+    fetch(`${AV_BASE}?function=GLOBAL_QUOTE&symbol=${ticker}&apikey=${key}`)
   ]);
 
-  if (!histRes.ok)  throw new Error(`HTTP ${histRes.status}`);
-  if (!quoteRes.ok) throw new Error(`HTTP ${quoteRes.status}`);
+  if (!weeklyRes.ok)  throw new Error(`HTTP ${weeklyRes.status}`);
+  if (!quoteRes.ok)   throw new Error(`HTTP ${quoteRes.status}`);
 
-  const histJson  = await histRes.json();
-  const quoteJson = await quoteRes.json();
+  const weeklyJson = await weeklyRes.json();
+  const quoteJson  = await quoteRes.json();
 
-  if (histJson['Error Message'])  throw new Error(histJson['Error Message']);
-  if (quoteJson['Error Message']) throw new Error(quoteJson['Error Message']);
+  // Check for AV error messages
+  if (weeklyJson['Error Message'] || weeklyJson['Note'] || weeklyJson['Information']) {
+    const msg = weeklyJson['Error Message'] || weeklyJson['Note'] || weeklyJson['Information'];
+    throw new Error(msg.length > 80 ? msg.slice(0, 80) + '…' : msg);
+  }
+  if (quoteJson['Error Message'] || quoteJson['Note'] || quoteJson['Information']) {
+    const msg = quoteJson['Error Message'] || quoteJson['Note'] || quoteJson['Information'];
+    throw new Error(msg.length > 80 ? msg.slice(0, 80) + '…' : msg);
+  }
 
-  const historical = histJson.historical;
-  if (!historical || historical.length === 0) throw new Error('No historical data');
+  const weekly = weeklyJson['Weekly Adjusted Time Series'];
+  if (!weekly) throw new Error('No weekly data returned');
 
-  const quote   = Array.isArray(quoteJson) ? quoteJson[0] : quoteJson;
-  if (!quote?.price) throw new Error('No quote data');
+  const quote = quoteJson['Global Quote'];
+  if (!quote || !quote['05. price']) throw new Error('No quote returned');
 
-  const high3yr = Math.max(...historical.map(d => d.high || d.close || 0));
-  const current = quote.price;
-  const name    = quote.name || ticker;
+  // Filter to last 3 years
+  const cutoff = new Date();
+  cutoff.setFullYear(cutoff.getFullYear() - 3);
+
+  const high3yr = Object.entries(weekly)
+    .filter(([date]) => new Date(date) >= cutoff)
+    .reduce((max, [, vals]) => {
+      const h = parseFloat(vals['2. high'] || vals['4. close']);
+      return h > max ? h : max;
+    }, 0);
+
+  const current = parseFloat(quote['05. price']);
+  const name    = ticker; // AV global quote doesn't include name; use ticker as fallback
 
   if (!high3yr) throw new Error('Could not compute 3yr high');
 
@@ -294,27 +241,22 @@ async function fetchFromAPI(ticker) {
   return { ticker, name, high3yr, current, pct };
 }
 
-// ── Smart load: use cache or fetch ──────────────────────
+// ── Smart load ───────────────────────────────────────────
 async function loadStock(ticker, forceRefresh = false) {
   const tbody = document.getElementById('stockTable');
-
-  // Show loading row
   const existing = document.getElementById(`row-${ticker}`);
   const loadRow  = renderRow({ ticker }, true);
   if (existing) tbody.replaceChild(loadRow, existing);
   else          tbody.appendChild(loadRow);
 
-  // Check cache first (unless force-refreshing)
   if (!forceRefresh) {
     const cached = getCached(ticker);
     if (cached) {
       document.getElementById(`row-${ticker}`)?.replaceWith(renderRow(cached));
-      updateCacheInfo();
-      return;
+      updateCacheInfo(); return;
     }
   }
 
-  // Fetch from API
   try {
     const data = await fetchFromAPI(ticker);
     setCached(ticker, data);
@@ -325,46 +267,31 @@ async function loadStock(ticker, forceRefresh = false) {
   updateCacheInfo();
 }
 
-// ── Load all stocks ──────────────────────────────────────
 async function loadAll(forceRefresh = false) {
   if (!getKey()) {
     document.getElementById('stockTable').innerHTML =
-      '<tr><td colspan="6"><span class="status" style="color:#a78bfa">⚠ Enter your FMP API key above and click Save Key.</span></td></tr>';
+      '<tr><td colspan="6"><span class="status" style="color:var(--accent)">⚠ Enter your Alpha Vantage API key above and click Save Key.</span></td></tr>';
     return;
   }
-  await Promise.all(STOCKS.map(t => loadStock(t, forceRefresh)));
+  // Load sequentially to avoid hitting AV rate limit (5 req/min on free tier)
+  for (const t of STOCKS) await loadStock(t, forceRefresh);
   updateCacheInfo();
 }
 
-function forceRefreshAll() {
-  STOCKS.forEach(clearCacheFor);
-  loadAll(true);
-}
+function forceRefreshAll() { STOCKS.forEach(clearCacheFor); loadAll(true); }
 
-// ── Cache status display ─────────────────────────────────
+// ── Cache info ───────────────────────────────────────────
 function updateCacheInfo() {
   const cache = loadCache();
-  const now   = Date.now();
-  const infos = STOCKS.map(t => {
-    const entry = cache[t];
-    if (!entry) return null;
-    const ageMs  = now - entry.fetchedAt;
-    const ageMin = Math.floor(ageMs / 60000);
-    const nextMs = CACHE_TTL - ageMs;
-    const nextH  = Math.floor(nextMs / 3600000);
-    const nextM  = Math.floor((nextMs % 3600000) / 60000);
-    return { ticker: t, ageMin, nextH, nextM, fresh: ageMs < CACHE_TTL };
-  }).filter(Boolean);
-
-  if (!infos.length) { document.getElementById('cacheInfo').innerHTML = ''; return; }
-
-  const oldest     = infos.reduce((a, b) => a.ageMin > b.ageMin ? a : b);
-  const allFresh   = infos.every(i => i.fresh);
-  const fetchedAt  = new Date(cache[oldest.ticker]?.fetchedAt).toLocaleTimeString();
-  const cls        = allFresh ? 'fresh' : 'stale';
-  const next       = infos[0]; // all fetched together, use first
+  const entry = cache[STOCKS[0]];
+  if (!entry) { document.getElementById('cacheInfo').innerHTML = ''; return; }
+  const ageMs  = Date.now() - entry.fetchedAt;
+  const nextMs = CACHE_TTL - ageMs;
+  const nextH  = Math.floor(nextMs / 3600000);
+  const nextM  = Math.floor((nextMs % 3600000) / 60000);
+  const time   = new Date(entry.fetchedAt).toLocaleTimeString();
   document.getElementById('cacheInfo').innerHTML =
-    `<span class="${cls}">● cached</span> · fetched ${fetchedAt}<br>next refresh in ${next.nextH}h ${next.nextM}m`;
+    `<span class="fresh">● cached</span> · fetched ${time}<br>next refresh in ${nextH}h ${nextM}m`;
 }
 
 // ── Render ───────────────────────────────────────────────
@@ -382,7 +309,7 @@ function renderRow(data, loading = false, error = null) {
   const { ticker } = data;
   const tr  = document.createElement('tr');
   tr.id     = `row-${ticker}`;
-  const btn = `<button class="danger" onclick="removeStock('${ticker}')">✕</button>`;
+  const btn = `<button class="danger" onclick="removeStock('${ticker}')">✕ Remove</button>`;
 
   if (loading) {
     tr.innerHTML = `<td class="ticker">${ticker}</td><td colspan="4"><span class="status"><span class="spinner"></span>Loading…</span></td><td>${btn}</td>`;
@@ -413,7 +340,7 @@ function addStock() {
   const input  = document.getElementById('addInput');
   const ticker = input.value.trim().toUpperCase();
   if (!ticker) return;
-  if (STOCKS.includes(ticker)) { alert(`${ticker} is already in the list.`); return; }
+  if (STOCKS.includes(ticker)) { alert(`${ticker} is already listed.`); return; }
   STOCKS.push(ticker);
   input.value = '';
   loadStock(ticker, false);
@@ -424,7 +351,6 @@ function removeStock(ticker) {
   document.getElementById(`row-${ticker}`)?.remove();
   updateCacheInfo();
 }
-
 document.getElementById('addInput').addEventListener('keydown', e => { if (e.key === 'Enter') addStock(); });
 
 // ── Init ─────────────────────────────────────────────────
