@@ -194,7 +194,7 @@ async function fetchFromAPI(ticker) {
   const key = getKey();
   if (!key) throw new Error('No API key — enter it above');
 
-  const res = await fetch(`${AV_BASE}?function=TIME_SERIES_WEEKLY_ADJUSTED&symbol=${ticker}&apikey=${key}`);
+  const res = await fetch(`${AV_BASE}?function=TIME_SERIES_WEEKLY_ADJUSTED&symbol=${ticker}&outputsize=full&apikey=${key}`);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
   const json = await res.json();
