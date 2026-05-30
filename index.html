@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Stock Tracker — 3-Year High</title>
+  <!-- EmailJS — sends threshold alert emails directly from the browser -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
   <style>
@@ -128,8 +130,12 @@
     </table>
   </div>
 
+  <!-- Email alert status bar -->
+  <div id="alertStatus" style="display:none;margin-top:1.5rem;font-family:'Space Mono',monospace;font-size:0.7rem;padding:0.75rem 1rem;border-left:3px solid var(--accent);background:#0d1a12;color:#a0d8c8;line-height:1.8;"></div>
+
   <footer>
     Data: <a href="https://massive.com" target="_blank">Massive</a> · daily OHLC bars · fetched at most every 6 hours · cached in browser.<br>
+    Email alerts via <a href="https://www.emailjs.com" target="_blank">EmailJS</a> · free tier = 200 emails/month.<br>
     To permanently add tickers, edit the <code>STOCKS</code> array at the top of the &lt;script&gt; in index.html.
   </footer>
 
@@ -139,8 +145,54 @@
 // ─────────────────────────────────────────────────────────
 //  ① EDIT THIS LIST to change your default stocks
 // ─────────────────────────────────────────────────────────
-let STOCKS = ['VOO', 'VTSAX', 'TSLA', 'AAPL'];
+let STOCKS = ['VOO', 'VGT', 'VTI', 'TSLA', 'AAPL'];
 // ─────────────────────────────────────────────────────────
+
+// ─────────────────────────────────────────────────────────
+//  ② MUTUAL FUND → ETF FALLBACK MAP
+//  Mutual funds (e.g. VTSAX) have no exchange bar data.
+//  Add any problem tickers here and we'll fetch their ETF
+//  equivalent but display the original ticker + name.
+//  Add more as needed: 'MUTUAL_FUND': 'ETF_EQUIVALENT'
+// ─────────────────────────────────────────────────────────
+const FUND_MAP = {
+  // Vanguard mutual funds → ETF equivalents
+  'VTSAX': 'VTI',   // Total Stock Market Index
+  'VFIAX': 'VOO',   // 500 Index
+  'VBTLX': 'BND',   // Total Bond Market Index
+  'VTIAX': 'VXUS',  // Total International Stock Index
+  'VIGAX': 'VUG',   // Growth Index
+  'VVIAX': 'VTV',   // Value Index
+  'VSMAX': 'VB',    // Small-Cap Index
+  'VMGMX': 'VOT',   // Mid-Cap Growth Index
+  'VMVAX': 'VOE',   // Mid-Cap Value Index
+  'VWELX': 'VWELX', // Wellington (no ETF, will fail gracefully)
+  // Fidelity mutual funds → ETF equivalents
+  'FXAIX': 'IVV',   // 500 Index
+  'FZROX': 'ITOT',  // Zero Total Market
+  'FSKAX': 'ITOT',  // Total Market Index
+  'FXNAX': 'AGG',   // US Bond Index
+};
+// ─────────────────────────────────────────────────────────
+
+// ─────────────────────────────────────────────────────────
+//  ③ EMAIL ALERT SETTINGS (EmailJS)
+//  Sign up free at https://www.emailjs.com then:
+//  a) Create an Email Service (Gmail recommended) → copy Service ID
+//  b) Create an Email Template → copy Template ID
+//     Template variables used: {{to_email}}, {{subject}}, {{message}}
+//  c) Copy your Public Key from Account → API Keys
+//  Paste all three below and set ALERTS_ENABLED = true
+// ─────────────────────────────────────────────────────────
+const EMAILJS_PUBLIC_KEY  = 'YOUR_PUBLIC_KEY';   // e.g. 'abc123XYZ'
+const EMAILJS_SERVICE_ID  = 'YOUR_SERVICE_ID';   // e.g. 'service_xxxxxx'
+const EMAILJS_TEMPLATE_ID = 'YOUR_TEMPLATE_ID';  // e.g. 'template_xxxxxx'
+const ALERT_TO_EMAIL      = '12.laplante@gmail.com';
+const ALERTS_ENABLED      = false; // ← set to true after filling in keys above
+// ─────────────────────────────────────────────────────────
+
+// Track which alerts have already been sent this session so we don't spam
+const sentAlerts = new Set();
 
 const BASE      = 'https://api.massive.com';
 const CACHE_TTL = 6 * 60 * 60 * 1000; // 6 hours
@@ -197,13 +249,19 @@ function yesterday() {
 // Uses the Custom Bars endpoint: daily OHLC for 3 years in one call.
 // Docs: GET /v2/aggs/ticker/{ticker}/range/1/day/{from}/{to}
 // Response: { results: [ { o, h, l, c, v, t }, ... ], resultsCount, status }
+// If a ticker is a mutual fund with no bar data, we transparently fetch its
+// ETF equivalent from FUND_MAP and display the original ticker label.
 async function fetchFromAPI(ticker) {
   const key  = getKey();
   if (!key) throw new Error('No API key — enter it above');
 
+  // Use ETF equivalent for data fetching if this is a known mutual fund
+  const dataTicker = FUND_MAP[ticker] || ticker;
+  const isMapped   = dataTicker !== ticker;
+
   const from = threeYearsAgo();
   const to   = yesterday();
-  const url  = `${BASE}/v2/aggs/ticker/${ticker}/range/1/day/${from}/${to}?adjusted=true&sort=asc&limit=1500&apiKey=${key}`;
+  const url  = `${BASE}/v2/aggs/ticker/${dataTicker}/range/1/day/${from}/${to}?adjusted=true&sort=asc&limit=1500&apiKey=${key}`;
 
   const res = await fetch(url);
   if (!res.ok) {
@@ -218,7 +276,10 @@ async function fetchFromAPI(ticker) {
   }
 
   const bars = json.results;
-  if (!bars || bars.length === 0) throw new Error('No data returned');
+  if (!bars || bars.length === 0) {
+    if (isMapped) throw new Error(`No data for ${ticker} or its ETF equivalent (${dataTicker})`);
+    throw new Error('No data returned — if this is a mutual fund, add it to FUND_MAP');
+  }
 
   // 3-year high = max daily HIGH across all bars
   const high3yr = bars.reduce((max, bar) => bar.h > max ? bar.h : max, 0);
@@ -230,17 +291,87 @@ async function fetchFromAPI(ticker) {
 
   const pct = ((current - high3yr) / high3yr) * 100;
 
-  // Fetch company name from ticker overview (best-effort, non-blocking)
+  // Fetch display name — use original ticker's name if available, else ETF name
   let name = ticker;
   try {
     const infoRes = await fetch(`${BASE}/v3/reference/tickers/${ticker}?apiKey=${key}`);
     if (infoRes.ok) {
       const info = await infoRes.json();
       name = info.results?.name || ticker;
+    } else if (isMapped) {
+      // Fall back to ETF name if mutual fund lookup fails
+      const etfRes = await fetch(`${BASE}/v3/reference/tickers/${dataTicker}?apiKey=${key}`);
+      if (etfRes.ok) {
+        const etfInfo = await etfRes.json();
+        name = etfInfo.results?.name || ticker;
+      }
     }
   } catch { /* use ticker as name fallback */ }
 
   return { ticker, name, high3yr, current, pct };
+}
+
+// ── EmailJS init ─────────────────────────────────────────
+if (ALERTS_ENABLED && EMAILJS_PUBLIC_KEY !== 'YOUR_PUBLIC_KEY') {
+  emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
+}
+
+// ── Check thresholds and send alert email if needed ──────
+async function checkAndAlert(ticker, name, pct) {
+  if (!ALERTS_ENABLED || EMAILJS_PUBLIC_KEY === 'YOUR_PUBLIC_KEY') return;
+
+  // Determine which threshold was crossed (only the deepest one)
+  let threshold = null;
+  if (pct <= -40)      threshold = -40;
+  else if (pct <= -30) threshold = -30;
+  else if (pct <= -20) threshold = -20;
+
+  if (!threshold) return; // no threshold crossed
+
+  // Only send once per ticker+threshold per session
+  const alertKey = `${ticker}_${threshold}`;
+  if (sentAlerts.has(alertKey)) return;
+  sentAlerts.add(alertKey);
+
+  const sign    = pct >= 0 ? '+' : '';
+  const subject = `⚠️ Stock Alert: ${ticker} is ${sign}${pct.toFixed(2)}% from 3-year high`;
+  const message =
+    `Stock Alert — ${new Date().toLocaleString()}
+
+` +
+    `Ticker:        ${ticker}
+` +
+    `Name:          ${name}
+` +
+    `Change:        ${sign}${pct.toFixed(2)}% from 3-year high
+` +
+    `Threshold hit: ${threshold}%
+
+` +
+    `Open your tracker to see full details.`;
+
+  try {
+    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+      to_email: ALERT_TO_EMAIL,
+      subject,
+      message,
+    });
+    console.log(`Alert sent for ${ticker} at ${threshold}% threshold`);
+    showAlertToast(ticker, threshold, pct);
+  } catch (err) {
+    console.error('EmailJS send failed:', err);
+  }
+}
+
+// ── Toast notification when an alert email is sent ───────
+function showAlertToast(ticker, threshold, pct) {
+  const colors = { '-20': 'var(--orange)', '-30': 'var(--gold)', '-40': 'var(--green-alert)' };
+  const color  = colors[String(threshold)] || 'var(--accent)';
+  const toast  = document.createElement('div');
+  toast.style.cssText = `position:fixed;bottom:2rem;right:2rem;z-index:999;background:#1a1a28;border:1px solid ${color};color:${color};font-family:'Space Mono',monospace;font-size:0.75rem;padding:0.75rem 1.25rem;max-width:300px;line-height:1.6;box-shadow:0 4px 24px #0008;`;
+  toast.innerHTML = `✉️ Alert email sent<br><strong>${ticker}</strong> hit the ${threshold}% threshold<br><span style="opacity:0.7">${pct.toFixed(2)}% from 3yr high</span>`;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 6000);
 }
 
 // ── Smart load: cache first, then API ───────────────────
@@ -264,6 +395,7 @@ async function loadStock(ticker, forceRefresh = false) {
     const data = await fetchFromAPI(ticker);
     setCached(ticker, data);
     document.getElementById(`row-${ticker}`)?.replaceWith(renderRow(data));
+    checkAndAlert(data.ticker, data.name, data.pct);
   } catch (e) {
     document.getElementById(`row-${ticker}`)?.replaceWith(renderRow({ ticker }, false, e.message));
   }
@@ -359,10 +491,26 @@ function removeStock(ticker) {
 }
 document.getElementById('addInput').addEventListener('keydown', e => { if (e.key === 'Enter') addStock(); });
 
+// ── Show email alert config status on page ───────────────
+function updateAlertStatus() {
+  const el = document.getElementById('alertStatus');
+  if (!el) return;
+  if (ALERTS_ENABLED && EMAILJS_PUBLIC_KEY !== 'YOUR_PUBLIC_KEY') {
+    el.style.display = 'block';
+    el.innerHTML = '✉️ Email alerts <strong style="color:var(--accent)">ON</strong> → sending to ' + ALERT_TO_EMAIL + '<br>Alerts fire once per session when a stock crosses −20%, −30%, or −40% from its 3-year high.';
+  } else {
+    el.style.display = 'block';
+    el.style.borderLeftColor = 'var(--muted)';
+    el.style.color = 'var(--muted)';
+    el.innerHTML = '✉️ Email alerts <strong>OFF</strong> — to enable, fill in EmailJS keys and set <code>ALERTS_ENABLED = true</code> in index.html. See <a href="https://www.emailjs.com" target="_blank" style="color:var(--muted)">emailjs.com</a> for setup (free, 200 emails/month).';
+  }
+}
+
 // ── Init ─────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', () => {
   const saved = getKey();
   if (saved) document.getElementById('apiKeyInput').value = saved;
+  updateAlertStatus();
   loadAll(false);
 });
 </script>
