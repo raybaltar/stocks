@@ -402,14 +402,20 @@ async function loadStock(ticker, forceRefresh = false) {
   updateCacheInfo();
 }
 
-// ── Load all stocks in parallel (Massive has no strict rate limit on free tier)
+// ── Load all stocks staggered to avoid 429 rate limit errors
+function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
 async function loadAll(forceRefresh = false) {
   if (!getKey()) {
     document.getElementById('stockTable').innerHTML =
       '<tr><td colspan="6"><span class="status" style="color:var(--accent)">⚠ Enter your Massive API key above and click Save Key.</span></td></tr>';
     return;
   }
-  await Promise.all(STOCKS.map(t => loadStock(t, forceRefresh)));
+  // Fire each request 500ms after the previous one to stay under rate limits
+  for (let i = 0; i < STOCKS.length; i++) {
+    await loadStock(STOCKS[i], forceRefresh);
+    if (i < STOCKS.length - 1) await delay(500);
+  }
   updateCacheInfo();
 }
 
