@@ -87,7 +87,7 @@
       <strong>📌 One-time setup:</strong> paste your <a href="https://massive.com/dashboard/keys" target="_blank">Massive API key</a> below and click <strong>Save Key</strong>. Stored in your browser only, never shared.
     </p>
     <div class="key-row">
-      <input id="apiKeyInput" type="text" placeholder="Paste your Massive API key here…" />
+      <input id="apiKeyInput" type="text" placeholder="ZuOmWDHXq4gXAO9wn35rjipkwj5xf1ki" />
       <button onclick="saveKey()">Save Key</button>
       <button class="danger" onclick="clearKey()">Clear</button>
     </div>
@@ -145,7 +145,7 @@
 // ─────────────────────────────────────────────────────────
 //  ① EDIT THIS LIST to change your default stocks
 // ─────────────────────────────────────────────────────────
-let STOCKS = ['VOO', 'VGT', 'VTI', 'TSLA', 'AAPL'];
+let STOCKS = ['VOO', 'VGT', 'VTI', 'VSMAX', 'VB', 'BND', 'VXUS', 'VYMI', 'DELL', 'TSLA', 'AAPL', 'GOOG', 'MSFT', 'AMZN', 'TSM', 'ALB', 'POWL', 'SHLS'];
 // ─────────────────────────────────────────────────────────
 
 // ─────────────────────────────────────────────────────────
@@ -184,11 +184,11 @@ const FUND_MAP = {
 //  c) Copy your Public Key from Account → API Keys
 //  Paste all three below and set ALERTS_ENABLED = true
 // ─────────────────────────────────────────────────────────
-const EMAILJS_PUBLIC_KEY  = 'YOUR_PUBLIC_KEY';   // e.g. 'abc123XYZ'
-const EMAILJS_SERVICE_ID  = 'YOUR_SERVICE_ID';   // e.g. 'service_xxxxxx'
-const EMAILJS_TEMPLATE_ID = 'YOUR_TEMPLATE_ID';  // e.g. 'template_xxxxxx'
+const EMAILJS_PUBLIC_KEY  = '-UECzgPhABaZ8xqBK';   // e.g. 'abc123XYZ'
+const EMAILJS_SERVICE_ID  = 'service_yc9qwki';   // e.g. 'service_xxxxxx'
+const EMAILJS_TEMPLATE_ID = 'template_etxjmwl';  // e.g. 'template_xxxxxx'
 const ALERT_TO_EMAIL      = '12.laplante@gmail.com';
-const ALERTS_ENABLED      = false; // ← set to true after filling in keys above
+const ALERTS_ENABLED      = true; // ← set to true after filling in keys above
 // ─────────────────────────────────────────────────────────
 
 // Track which alerts have already been sent this session so we don't spam
@@ -402,26 +402,14 @@ async function loadStock(ticker, forceRefresh = false) {
   updateCacheInfo();
 }
 
-// ── Load all stocks with a small stagger to avoid 429s ──
-function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
-
+// ── Load all stocks in parallel (Massive has no strict rate limit on free tier)
 async function loadAll(forceRefresh = false) {
   if (!getKey()) {
     document.getElementById('stockTable').innerHTML =
       '<tr><td colspan="6"><span class="status" style="color:var(--accent)">⚠ Enter your Massive API key above and click Save Key.</span></td></tr>';
     return;
   }
-  // Stagger requests 500ms apart — fast enough to feel instant,
-  // slow enough to avoid hitting Massive's rate limit.
-  for (let i = 0; i < STOCKS.length; i++) {
-    loadStock(STOCKS[i], forceRefresh); // intentionally not awaited so rows appear as they load
-    if (i < STOCKS.length - 1) await delay(500);
-  }
-  // Wait for all to finish before updating cache info
-  await Promise.all(STOCKS.map(t => {
-    const row = document.getElementById(`row-${t}`);
-    return row ? Promise.resolve() : new Promise(r => setTimeout(r, 3000));
-  }));
+  await Promise.all(STOCKS.map(t => loadStock(t, forceRefresh)));
   updateCacheInfo();
 }
 
@@ -528,6 +516,7 @@ window.addEventListener('DOMContentLoaded', () => {
   // Auto-reload the page once every 24 hours so alerts keep firing
   // even if you leave the tab open indefinitely.
   setInterval(() => location.reload(), 24 * 60 * 60 * 1000);
+  
 });
 </script>
 </body>
